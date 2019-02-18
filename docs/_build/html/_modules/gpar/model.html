@@ -358,7 +358,7 @@
 
             <span class="c1"># Replace data.</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">replace</span><span class="p">:</span>
-                <span class="n">y_sample</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
+                <span class="n">y_sample</span> <span class="o">=</span> <span class="p">(</span><span class="n">f</span> <span class="o">|</span> <span class="p">(</span><span class="n">xs</span><span class="p">,</span> <span class="n">f_sample</span><span class="p">))</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">xs</span><span class="p">)</span>
 
             <span class="c1"># Update inputs.</span>
             <span class="n">xs</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="n">xs</span><span class="p">,</span> <span class="n">y_sample</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>

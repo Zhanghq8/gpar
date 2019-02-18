@@ -163,9 +163,6 @@
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GPARRegressor&#39;</span><span class="p">]</span>
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
-<span class="c1"># Increase the regularisation a little bit to make it all more robust.</span>
-<span class="n">B</span><span class="o">.</span><span class="n">epsilon</span> <span class="o">=</span> <span class="mf">1e-8</span>
-
 
 <span class="k">def</span> <span class="nf">_uprank</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
     <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">ndim</span><span class="p">(</span><span class="n">x</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">2</span><span class="p">:</span>
@@ -197,27 +194,33 @@
                      <span class="n">scale</span><span class="p">,</span>
                      <span class="n">linear</span><span class="p">,</span>
                      <span class="n">linear_scale</span><span class="p">,</span>
+                     <span class="n">linear_with_inputs</span><span class="p">,</span>
                      <span class="n">nonlinear</span><span class="p">,</span>
                      <span class="n">nonlinear_scale</span><span class="p">,</span>
                      <span class="n">nonlinear_with_inputs</span><span class="p">,</span>
                      <span class="n">noise</span><span class="p">):</span>
     <span class="k">def</span> <span class="nf">model</span><span class="p">():</span>
-        <span class="c1"># Start out with a constant kernel.</span>
-        <span class="n">kernel</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">bnd</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;constant&#39;</span><span class="p">),</span> <span class="n">group</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>
-
         <span class="c1"># Add nonlinear kernel over inputs.</span>
         <span class="n">scales</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">bnd</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;I/NL/scales&#39;</span><span class="p">),</span> <span class="n">group</span><span class="o">=</span><span class="n">p</span><span class="p">,</span>
                         <span class="n">init</span><span class="o">=</span><span class="n">_vector_from_init</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
         <span class="n">variance</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">bnd</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;I/NL/var&#39;</span><span class="p">),</span> <span class="n">group</span><span class="o">=</span><span class="n">p</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-        <span class="n">input_kernel</span> <span class="o">=</span> <span class="n">variance</span> <span class="o">*</span> <span class="n">EQ</span><span class="p">()</span><span class="o">.</span><span class="n">stretch</span><span class="p">(</span><span class="n">scales</span><span class="p">)</span>
-        <span class="n">inds</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">))</span>
-        <span class="n">kernel</span> <span class="o">+=</span> <span class="n">input_kernel</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">inds</span><span class="p">)</span> <span class="k">if</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">input_kernel</span>
+        <span class="n">kernel</span> <span class="o">=</span> <span class="n">variance</span> <span class="o">*</span> <span class="n">EQ</span><span class="p">()</span><span class="o">.</span><span class="n">stretch</span><span class="p">(</span><span class="n">scales</span><span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">)))</span>
 
-        <span class="c1"># Add linear kernel if asked for.</span>
+        <span class="c1"># Add linear kernel over inputs and outputs if asked for.</span>
         <span class="k">if</span> <span class="n">linear</span><span class="p">:</span>
             <span class="n">scales</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">bnd</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;IO/L/scales&#39;</span><span class="p">),</span> <span class="n">group</span><span class="o">=</span><span class="n">p</span><span class="p">,</span>
                             <span class="n">init</span><span class="o">=</span><span class="n">_vector_from_init</span><span class="p">(</span><span class="n">linear_scale</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="n">p</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
-            <span class="n">kernel</span> <span class="o">+=</span> <span class="n">Linear</span><span class="p">()</span><span class="o">.</span><span class="n">stretch</span><span class="p">(</span><span class="n">scales</span><span class="p">)</span>
+            <span class="n">kernel_linear</span> <span class="o">=</span> <span class="n">Linear</span><span class="p">()</span><span class="o">.</span><span class="n">stretch</span><span class="p">(</span><span class="n">scales</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">linear_with_inputs</span><span class="p">:</span>
+                <span class="c1"># Linear dependencies depend on the inputs. Note that we do not</span>
+                <span class="c1"># need a variance.</span>
+                <span class="n">scales</span> <span class="o">=</span> <span class="n">vs</span><span class="o">.</span><span class="n">bnd</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="s1">&#39;I/L/scales&#39;</span><span class="p">),</span> <span class="n">group</span><span class="o">=</span><span class="n">p</span><span class="p">,</span>
+                                <span class="n">init</span><span class="o">=</span><span class="n">_vector_from_init</span><span class="p">(</span><span class="n">scale</span><span class="p">,</span> <span class="n">m</span><span class="p">))</span>
+                <span class="n">kernel_linear</span> <span class="o">*=</span> <span class="n">EQ</span><span class="p">()</span><span class="o">.</span><span class="n">stretch</span><span class="p">(</span><span class="n">scales</span><span class="p">)</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">m</span><span class="p">)))</span>
+
+            <span class="c1"># Add to the result.</span>
+            <span class="n">kernel</span> <span class="o">+=</span> <span class="n">kernel_linear</span>
 
         <span class="c1"># Add nonlinear kernel over outputs if asked for.</span>
         <span class="k">if</span> <span class="n">nonlinear</span> <span class="ow">and</span> <span class="n">p</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
@@ -287,6 +290,8 @@
 <span class="sd">            Defaults to `True`.</span>
 <span class="sd">        linear_scale (tensor, optional): Initial value(s) for the scale(s) of</span>
 <span class="sd">            the linear dependencies. Defaults to `100.`.</span>
+<span class="sd">        linear_with_inputs (bool, optional): Make the linear dependencies</span>
+<span class="sd">            between the outputs dependent on the inputs. Defaults to `False`.</span>
 <span class="sd">        nonlinear (bool, optional): Use nonlinear dependencies between outputs.</span>
 <span class="sd">            Defaults to `True`.</span>
 <span class="sd">        nonlinear_scale (tensor, optional): Initial value(s) for the length</span>
@@ -320,7 +325,8 @@
                  <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">linear</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                  <span class="n">linear_scale</span><span class="o">=</span><span class="mf">100.</span><span class="p">,</span>
-                 <span class="n">nonlinear</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                 <span class="n">linear_with_inputs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                 <span class="n">nonlinear</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">nonlinear_scale</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
                  <span class="n">nonlinear_with_inputs</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                  <span class="n">noise</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
@@ -334,6 +340,7 @@
             <span class="s1">&#39;scale&#39;</span><span class="p">:</span> <span class="n">scale</span><span class="p">,</span>
             <span class="s1">&#39;linear&#39;</span><span class="p">:</span> <span class="n">linear</span><span class="p">,</span>
             <span class="s1">&#39;linear_scale&#39;</span><span class="p">:</span> <span class="n">linear_scale</span><span class="p">,</span>
+            <span class="s1">&#39;linear_with_inputs&#39;</span><span class="p">:</span> <span class="n">linear_with_inputs</span><span class="p">,</span>
             <span class="s1">&#39;nonlinear&#39;</span><span class="p">:</span> <span class="n">nonlinear</span><span class="p">,</span>
             <span class="s1">&#39;nonlinear_scale&#39;</span><span class="p">:</span> <span class="n">nonlinear_scale</span><span class="p">,</span>
             <span class="s1">&#39;nonlinear_with_inputs&#39;</span><span class="p">:</span> <span class="n">nonlinear_with_inputs</span><span class="p">,</span>
@@ -461,8 +468,14 @@
             <span class="n">gpar</span> <span class="o">=</span> <span class="n">_construct_gpar</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">vs</span><span class="p">,</span> <span class="n">B</span><span class="o">.</span><span class="n">shape_int</span><span class="p">(</span><span class="n">x</span><span class="p">)[</span><span class="mi">1</span><span class="p">],</span> <span class="n">p</span><span class="p">)</span>
 
         <span class="c1"># Sample and return.</span>
-        <span class="n">samples</span> <span class="o">=</span> <span class="p">[</span><span class="n">gpar</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">latent</span><span class="o">=</span><span class="n">latent</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
-                   <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_samples</span><span class="p">)]</span>
+        <span class="n">i</span><span class="p">,</span> <span class="n">samples</span> <span class="o">=</span> <span class="mi">0</span><span class="p">,</span> <span class="p">[]</span>
+        <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="n">num_samples</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">samples</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gpar</span><span class="o">.</span><span class="n">sample</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">latent</span><span class="o">=</span><span class="n">latent</span><span class="p">)</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">())</span>
+                <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">log</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Caught exception during sampling: &quot;</span><span class="si">{}</span><span class="s1">&quot;.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">e</span><span class="p">))</span>
+
         <span class="k">return</span> <span class="n">samples</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="n">num_samples</span> <span class="o">==</span> <span class="mi">1</span> <span class="k">else</span> <span class="n">samples</span></div>
 
 <div class="viewcode-block" id="GPARRegressor.predict"><a class="viewcode-back" href="../../source/gpar.regression.html#gpar.regression.GPARRegressor.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">num_samples</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">latent</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">credible_bounds</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>

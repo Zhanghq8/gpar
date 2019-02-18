@@ -158,7 +158,7 @@
 <span id="gpar-regression-module"></span><h1>gpar.regression module<a class="headerlink" href="#module-gpar.regression" title="Permalink to this headline">¶</a></h1>
 <dl class="class">
 <dt id="gpar.regression.GPARRegressor">
-<em class="property">class </em><code class="descclassname">gpar.regression.</code><code class="descname">GPARRegressor</code><span class="sig-paren">(</span><em>replace=True</em>, <em>impute=True</em>, <em>scale=1.0</em>, <em>linear=True</em>, <em>linear_scale=100.0</em>, <em>nonlinear=True</em>, <em>nonlinear_scale=0.1</em>, <em>nonlinear_with_inputs=False</em>, <em>noise=0.1</em>, <em>x_ind=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gpar/regression.html#GPARRegressor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gpar.regression.GPARRegressor" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">gpar.regression.</code><code class="descname">GPARRegressor</code><span class="sig-paren">(</span><em>replace=True</em>, <em>impute=True</em>, <em>scale=1.0</em>, <em>linear=True</em>, <em>linear_scale=100.0</em>, <em>linear_with_inputs=False</em>, <em>nonlinear=False</em>, <em>nonlinear_scale=0.1</em>, <em>nonlinear_with_inputs=False</em>, <em>noise=0.1</em>, <em>x_ind=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gpar/regression.html#GPARRegressor"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gpar.regression.GPARRegressor" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>GPAR regressor.</p>
 <table class="docutils field-list" frame="void" rules="none">
@@ -177,6 +177,8 @@ the inputs. Defaults to <cite>1.0</cite>.</li>
 Defaults to <cite>True</cite>.</li>
 <li><strong>linear_scale</strong> (<em>tensor</em><em>, </em><em>optional</em>) – Initial value(s) for the scale(s) of
 the linear dependencies. Defaults to <cite>100.</cite>.</li>
+<li><strong>linear_with_inputs</strong> (<em>bool</em><em>, </em><em>optional</em>) – Make the linear dependencies
+between the outputs dependent on the inputs. Defaults to <cite>False</cite>.</li>
 <li><strong>nonlinear</strong> (<em>bool</em><em>, </em><em>optional</em>) – Use nonlinear dependencies between outputs.
 Defaults to <cite>True</cite>.</li>
 <li><strong>nonlinear_scale</strong> (<em>tensor</em><em>, </em><em>optional</em>) – Initial value(s) for the length
