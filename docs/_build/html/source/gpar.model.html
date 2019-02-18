@@ -171,7 +171,7 @@
 the data. Defaults to <cite>False</cite>.</li>
 <li><strong>impute</strong> (<em>bool</em><em>, </em><em>optional</em>) – Impute missing data points with the predictive
 mean to make the data set closed downwards. Defaults to <cite>False</cite>.</li>
-<li><strong>x_sparse</strong> (<code class="xref py py-class docutils literal notranslate"><span class="pre">data.Data</span></code>, optional) – Locations of inducing points
+<li><strong>x_ind</strong> (<em>tensor</em><em>, </em><em>optional</em>) – Locations of inducing points
 for a sparse approximation. Defaults to <cite>None</cite>.</li>
 </ul>
 </td>
@@ -224,7 +224,7 @@ return a tuple containing the GP and the noise.</td>
 <tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
 <li><strong>x</strong> (<em>tensor</em>) – Inputs.</li>
 <li><strong>y</strong> (<em>tensor</em>) – Outputs.</li>
-<li><strong>only_last_layer</strong> (<em>bool</em><em>, </em><em>optiona</em>) – Compute the pdf of only the last
+<li><strong>only_last_layer</strong> (<em>bool</em><em>, </em><em>optional</em>) – Compute the pdf of only the last
 layer. Defaults to <cite>False</cite>.</li>
 </ul>
 </td>
