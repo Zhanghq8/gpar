@@ -311,6 +311,31 @@ outputs. Defaults to <cite>False</cite>.</li>
 </dd></dl>
 
 <dl class="method">
+<dt id="gpar.regression.GPARRegressor.logpdf">
+<code class="descname">logpdf</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>unbiased_sample=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gpar/regression.html#GPARRegressor.logpdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gpar.regression.GPARRegressor.logpdf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Compute the logpdf of observations.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>x</strong> (<em>tensor</em>) – Inputs.</li>
+<li><strong>y</strong> (<em>tensor</em>) – Outputs.</li>
+<li><strong>unbiased_sample</strong> (<em>bool</em><em>, </em><em>optional</em>) – Compute an unbiased estimate of
+the logpdf. This make a difference when <cite>y</cite> is not closed
+downwards. Defaults to <cite>True</cite>.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="docutils">
+<dt>Returns</dt>
+<dd>float: Estimate of the logpdf.</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
 <dt id="gpar.regression.GPARRegressor.predict">
 <code class="descname">predict</code><span class="sig-paren">(</span><em>x</em>, <em>num_samples=100</em>, <em>latent=True</em>, <em>credible_bounds=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gpar/regression.html#GPARRegressor.predict"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gpar.regression.GPARRegressor.predict" title="Permalink to this definition">¶</a></dt>
 <dd><p>Predict at new inputs.</p>

@@ -273,7 +273,7 @@
 
         <span class="k">return</span> <span class="n">gpar</span>
 
-<div class="viewcode-block" id="GPAR.logpdf"><a class="viewcode-back" href="../../source/gpar.model.html#gpar.model.GPAR.logpdf">[docs]</a>    <span class="k">def</span> <span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">only_last_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="GPAR.logpdf"><a class="viewcode-back" href="../../source/gpar.model.html#gpar.model.GPAR.logpdf">[docs]</a>    <span class="k">def</span> <span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">only_last_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">unbiased_sample</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute the logpdf.</span>
 
 <span class="sd">        Args:</span>
@@ -281,6 +281,8 @@
 <span class="sd">            y (tensor): Outputs.</span>
 <span class="sd">            only_last_layer (bool, optional): Compute the pdf of only the last</span>
 <span class="sd">                layer. Defaults to `False`.</span>
+<span class="sd">            unbiased_sample (bool, optional): Compute an unbiased sample of the</span>
+<span class="sd">                logpdf. Defaults to `False`.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            :class:`.gpar.GPAR`: Updated GPAR model.</span>
@@ -296,6 +298,14 @@
             <span class="n">f</span><span class="p">,</span> <span class="n">noise</span> <span class="o">=</span> <span class="n">model</span><span class="p">()</span>
             <span class="n">e</span> <span class="o">=</span> <span class="n">GP</span><span class="p">(</span><span class="n">Delta</span><span class="p">()</span> <span class="o">*</span> <span class="n">noise</span><span class="p">,</span> <span class="n">graph</span><span class="o">=</span><span class="n">f</span><span class="o">.</span><span class="n">graph</span><span class="p">)</span>
             <span class="n">f_noisy</span> <span class="o">=</span> <span class="n">f</span> <span class="o">+</span> <span class="n">e</span>
+
+            <span class="c1"># If an unbiased estimate of the logpdf must be produced, sample</span>
+            <span class="c1"># missing observations.</span>
+            <span class="k">if</span> <span class="n">unbiased_sample</span><span class="p">:</span>
+                <span class="n">missing</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>  <span class="c1"># Check for missing data.</span>
+                <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">missing</span><span class="p">):</span>
+                    <span class="c1"># Impute missing data with samples.</span>
+                    <span class="n">y</span> <span class="o">=</span> <span class="n">_merge</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">f_noisy</span><span class="p">(</span><span class="n">xs</span><span class="p">[</span><span class="n">missing</span><span class="p">])</span><span class="o">.</span><span class="n">sample</span><span class="p">(),</span> <span class="n">missing</span><span class="p">)</span>
 
             <span class="c1"># Check whether this is the last layer.</span>
             <span class="n">last_layer</span> <span class="o">=</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
@@ -367,7 +377,7 @@
         <span class="k">return</span> <span class="n">sample</span></div>
 
     <span class="k">def</span> <span class="nf">_update_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">xs</span><span class="p">,</span> <span class="n">xs_ind</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">f_post</span><span class="p">):</span>
-        <span class="n">available</span> <span class="o">=</span> <span class="o">~</span><span class="n">np</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+        <span class="n">available</span> <span class="o">=</span> <span class="o">~</span><span class="n">B</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
 
         <span class="c1"># Update inputs of inducing points.</span>
         <span class="k">if</span> <span class="n">xs_ind</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
