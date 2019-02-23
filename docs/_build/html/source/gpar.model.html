@@ -215,7 +215,7 @@ return a tuple containing the GP and the noise.</td>
 
 <dl class="method">
 <dt id="gpar.model.GPAR.logpdf">
-<code class="descname">logpdf</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>only_last_layer=False</em>, <em>unbiased_sample=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gpar/model.html#GPAR.logpdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gpar.model.GPAR.logpdf" title="Permalink to this definition">¶</a></dt>
+<code class="descname">logpdf</code><span class="sig-paren">(</span><em>x</em>, <em>y</em>, <em>only_last_layer=False</em>, <em>sample_missing=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gpar/model.html#GPAR.logpdf"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gpar.model.GPAR.logpdf" title="Permalink to this definition">¶</a></dt>
 <dd><p>Compute the logpdf.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -226,8 +226,8 @@ return a tuple containing the GP and the noise.</td>
 <li><strong>y</strong> (<em>tensor</em>) – Outputs.</li>
 <li><strong>only_last_layer</strong> (<em>bool</em><em>, </em><em>optional</em>) – Compute the pdf of only the last
 layer. Defaults to <cite>False</cite>.</li>
-<li><strong>unbiased_sample</strong> (<em>bool</em><em>, </em><em>optional</em>) – Compute an unbiased sample of the
-pdf, _not_ logpdf. Defaults to <cite>False</cite>.</li>
+<li><strong>sample_missing</strong> (<em>bool</em><em>, </em><em>optional</em>) – Sample missing data to compute an
+unbiased estimate of the pdf, <em>not</em> logpdf. Defaults to <cite>False</cite>.</li>
 </ul>
 </td>
 </tr>

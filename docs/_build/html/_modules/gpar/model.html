@@ -254,7 +254,7 @@
 
         <span class="k">return</span> <span class="n">gpar</span>
 
-<div class="viewcode-block" id="GPAR.logpdf"><a class="viewcode-back" href="../../source/gpar.model.html#gpar.model.GPAR.logpdf">[docs]</a>    <span class="k">def</span> <span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">only_last_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">unbiased_sample</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="viewcode-block" id="GPAR.logpdf"><a class="viewcode-back" href="../../source/gpar.model.html#gpar.model.GPAR.logpdf">[docs]</a>    <span class="k">def</span> <span class="nf">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">only_last_layer</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">sample_missing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Compute the logpdf.</span>
 
 <span class="sd">        Args:</span>
@@ -262,8 +262,8 @@
 <span class="sd">            y (tensor): Outputs.</span>
 <span class="sd">            only_last_layer (bool, optional): Compute the pdf of only the last</span>
 <span class="sd">                layer. Defaults to `False`.</span>
-<span class="sd">            unbiased_sample (bool, optional): Compute an unbiased sample of the</span>
-<span class="sd">                pdf, _not_ logpdf. Defaults to `False`.</span>
+<span class="sd">            sample_missing (bool, optional): Sample missing data to compute an</span>
+<span class="sd">                unbiased estimate of the pdf, *not* logpdf. Defaults to `False`.</span>
 
 <span class="sd">        Returns:</span>
 <span class="sd">            :class:`.gpar.GPAR`: Updated GPAR model.</span>
@@ -271,11 +271,11 @@
         <span class="n">logpdf</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">cast</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">B</span><span class="o">.</span><span class="n">dtype</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
         <span class="n">state</span> <span class="o">=</span> <span class="n">GPARState</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span><span class="p">)</span>
 
-        <span class="n">y_per_output</span> <span class="o">=</span> <span class="n">per_output</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">impute</span> <span class="ow">or</span> <span class="n">unbiased_sample</span><span class="p">)</span>
+        <span class="n">y_per_output</span> <span class="o">=</span> <span class="n">per_output</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">impute</span> <span class="ow">or</span> <span class="n">sample_missing</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">((</span><span class="n">y</span><span class="p">,</span> <span class="n">mask</span><span class="p">),</span> <span class="n">model</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">y_per_output</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)):</span>
 
             <span class="c1"># Sample missing to yield an unbiased estimate.</span>
-            <span class="n">state</span><span class="o">.</span><span class="n">next_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">sample_missing</span><span class="o">=</span><span class="n">unbiased_sample</span><span class="p">)</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">next_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">sample_missing</span><span class="o">=</span><span class="n">sample_missing</span><span class="p">)</span>
             <span class="n">state</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
 
             <span class="c1"># Accumulate logpdf.</span>
