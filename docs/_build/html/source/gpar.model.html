@@ -160,7 +160,7 @@
 <dl class="class">
 <dt id="gpar.model.GPAR">
 <em class="property">class </em><code class="descclassname">gpar.model.</code><code class="descname">GPAR</code><span class="sig-paren">(</span><em>replace=False</em>, <em>impute=False</em>, <em>x_ind=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/gpar/model.html#GPAR"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#gpar.model.GPAR" title="Permalink to this definition">¶</a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">plum.resolvable.Referentiable</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
 <p>Basic GPAR model.</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -227,7 +227,7 @@ return a tuple containing the GP and the noise.</td>
 <li><strong>only_last_layer</strong> (<em>bool</em><em>, </em><em>optional</em>) – Compute the pdf of only the last
 layer. Defaults to <cite>False</cite>.</li>
 <li><strong>unbiased_sample</strong> (<em>bool</em><em>, </em><em>optional</em>) – Compute an unbiased sample of the
-logpdf. Defaults to <cite>False</cite>.</li>
+pdf, _not_ logpdf. Defaults to <cite>False</cite>.</li>
 </ul>
 </td>
 </tr>
