@@ -273,15 +273,17 @@
 
         <span class="n">y_per_output</span> <span class="o">=</span> <span class="n">per_output</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">impute</span> <span class="ow">or</span> <span class="n">sample_missing</span><span class="p">)</span>
         <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">((</span><span class="n">y</span><span class="p">,</span> <span class="n">mask</span><span class="p">),</span> <span class="n">model</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">y_per_output</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)):</span>
-
-            <span class="c1"># Sample missing to yield an unbiased estimate.</span>
-            <span class="n">state</span><span class="o">.</span><span class="n">next_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">sample_missing</span><span class="o">=</span><span class="n">sample_missing</span><span class="p">)</span>
+            <span class="n">state</span><span class="o">.</span><span class="n">next_layer</span><span class="p">(</span><span class="n">model</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
             <span class="n">state</span><span class="o">.</span><span class="n">observe</span><span class="p">(</span><span class="n">y</span><span class="p">)</span>
 
             <span class="c1"># Accumulate logpdf.</span>
             <span class="n">last_layer</span> <span class="o">=</span> <span class="n">i</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">layers</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span>
             <span class="k">if</span> <span class="o">~</span><span class="n">only_last_layer</span> <span class="ow">or</span> <span class="p">(</span><span class="n">last_layer</span> <span class="ow">and</span> <span class="n">only_last_layer</span><span class="p">):</span>
                 <span class="n">logpdf</span> <span class="o">+=</span> <span class="n">state</span><span class="o">.</span><span class="n">compute_logpdf</span><span class="p">()</span>
+
+            <span class="c1"># Sample missing data for an unbiased sample of the logpdf.</span>
+            <span class="k">if</span> <span class="n">sample_missing</span><span class="p">:</span>
+                <span class="n">state</span><span class="o">.</span><span class="n">sample_missing</span><span class="p">()</span>
 
         <span class="k">return</span> <span class="n">logpdf</span></div>
 
@@ -339,13 +341,13 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="kc">None</span>
 
         <span class="c1"># The posterior of the latent and observed function will not be exposed</span>
-        <span class="c1"># directly, to implement lazy computation of the posterior.</span>
+        <span class="c1"># directly to implement lazy computation of the posterior.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_f_post</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_f_noisy_post</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_obs_args</span> <span class="o">=</span> <span class="kc">None</span>
 
-    <span class="k">def</span> <span class="nf">next_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">sample_missing</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">next_layer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Move to the next layer.</span>
 
 <span class="sd">        Args:</span>
@@ -353,13 +355,11 @@
 <span class="sd">            mask (tensor, optional): Boolean mask that determines which data</span>
 <span class="sd">                points to keep with respect to the previous layer. If not</span>
 <span class="sd">                specified, all data points are kept.</span>
-<span class="sd">            sample_missing (bool, optional): Sample missing data. Defaults to</span>
-<span class="sd">                `False`.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c1"># If this is not the first layer, update concatenate the previous</span>
         <span class="c1"># outputs to the inputs.</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">first_layer</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">_update_inputs</span><span class="p">(</span><span class="n">sample_missing</span><span class="o">=</span><span class="n">sample_missing</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_update_inputs</span><span class="p">()</span>
 
             <span class="c1"># Clear observations:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="kc">None</span>
@@ -415,30 +415,20 @@
 
         <span class="c1"># Lazily compute observations.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs_args</span>  <span class="c1"># Extract arguments from `self._obs_args`!</span>
+            <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs_args</span>  <span class="c1"># Arguments stored in `self._obs_args`!</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpar</span><span class="o">.</span><span class="n">sparse</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span> <span class="o">=</span> <span class="n">SparseObs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">e</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span> <span class="o">=</span> <span class="n">Obs</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_noisy</span><span class="p">(</span><span class="n">x</span><span class="p">),</span> <span class="n">y</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_obs</span>
 
-    <span class="k">def</span> <span class="nf">_update_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">sample_missing</span><span class="p">):</span>
+    <span class="k">def</span> <span class="nf">_update_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">available</span> <span class="o">=</span> <span class="o">~</span><span class="n">B</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
-
-        <span class="c1"># TODO: After imputation, should GPAR condition on the imputed data?</span>
-        <span class="c1"># TODO: Should this happen before updating of sparse inputs?</span>
 
         <span class="c1"># Update inputs of inducing points.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpar</span><span class="o">.</span><span class="n">sparse</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span><span class="p">,</span>
                                    <span class="bp">self</span><span class="o">.</span><span class="n">f_post</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
-
-        <span class="c1"># Sample missing data</span>
-        <span class="k">if</span> <span class="n">sample_missing</span> <span class="ow">and</span> <span class="n">B</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="o">~</span><span class="n">available</span><span class="p">):</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
-                            <span class="bp">self</span><span class="o">.</span><span class="n">f_noisy_post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="o">~</span><span class="n">available</span><span class="p">])</span><span class="o">.</span><span class="n">sample</span><span class="p">(),</span>
-                            <span class="o">~</span><span class="n">available</span><span class="p">)</span>
-            <span class="n">available</span> <span class="o">=</span> <span class="o">~</span><span class="n">B</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
 
         <span class="c1"># Impute missing data and replace available data.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpar</span><span class="o">.</span><span class="n">impute</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpar</span><span class="o">.</span><span class="n">replace</span><span class="p">:</span>
@@ -480,13 +470,10 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            float: Logpdf of observations.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="k">return</span> <span class="mi">0</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="mi">0</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">obs</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">graph</span><span class="o">.</span><span class="n">logpdf</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">obs</span><span class="p">)</span>
 
     <span class="k">def</span> <span class="nf">sample</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;Sample from the _prior_.</span>
+        <span class="sd">&quot;&quot;&quot;Sample from the *prior*.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            x (tensor): Inputs to sample at.</span>
@@ -498,6 +485,17 @@
         <span class="n">f_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
         <span class="n">e_sample</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">e</span><span class="p">(</span><span class="n">x</span><span class="p">)</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
         <span class="k">return</span> <span class="n">f_sample</span><span class="p">,</span> <span class="n">f_sample</span> <span class="o">+</span> <span class="n">e_sample</span>
+
+    <span class="k">def</span> <span class="nf">sample_missing</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Sample missing observations from the *posterior*.&quot;&quot;&quot;</span>
+        <span class="n">missing</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+
+        <span class="k">if</span> <span class="n">B</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">missing</span><span class="p">):</span>
+            <span class="c1"># Sample missing data.</span>
+            <span class="n">y_missing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_noisy_post</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">missing</span><span class="p">])</span><span class="o">.</span><span class="n">sample</span><span class="p">()</span>
+
+            <span class="c1"># Merge into the observations.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">y_missing</span><span class="p">,</span> <span class="n">missing</span><span class="p">)</span>
 
 
 <span class="k">def</span> <span class="nf">per_output</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">keep</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
