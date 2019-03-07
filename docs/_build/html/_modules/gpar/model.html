@@ -153,7 +153,7 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 
 <span class="kn">from</span> <span class="nn">lab</span> <span class="k">import</span> <span class="n">B</span>
-<span class="kn">from</span> <span class="nn">stheno</span> <span class="k">import</span> <span class="n">Delta</span><span class="p">,</span> <span class="n">GP</span><span class="p">,</span> <span class="n">Obs</span><span class="p">,</span> <span class="n">SparseObs</span>
+<span class="kn">from</span> <span class="nn">stheno</span> <span class="k">import</span> <span class="n">Delta</span><span class="p">,</span> <span class="n">GP</span><span class="p">,</span> <span class="n">Obs</span><span class="p">,</span> <span class="n">SparseObs</span><span class="p">,</span> <span class="n">dense</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;GPAR&#39;</span><span class="p">]</span>
 <span class="n">log</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -428,26 +428,29 @@
         <span class="c1"># Update inputs of inducing points.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpar</span><span class="o">.</span><span class="n">sparse</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span><span class="p">,</span>
-                                   <span class="bp">self</span><span class="o">.</span><span class="n">f_post</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+                                   <span class="bp">self</span><span class="o">.</span><span class="n">_estimate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x_ind</span><span class="p">)],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
         <span class="c1"># Impute missing data and replace available data.</span>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpar</span><span class="o">.</span><span class="n">impute</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpar</span><span class="o">.</span><span class="n">replace</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">f_post</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_estimate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="c1"># Just impute missing data.</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpar</span><span class="o">.</span><span class="n">impute</span> <span class="ow">and</span> <span class="n">B</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="o">~</span><span class="n">available</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">f_post</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="o">~</span><span class="n">available</span><span class="p">]),</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_estimate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="o">~</span><span class="n">available</span><span class="p">]),</span>
                                 <span class="o">~</span><span class="n">available</span><span class="p">)</span>
 
             <span class="c1"># Just replace available data.</span>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gpar</span><span class="o">.</span><span class="n">replace</span> <span class="ow">and</span> <span class="n">B</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">available</span><span class="p">):</span>
                 <span class="bp">self</span><span class="o">.</span><span class="n">y</span> <span class="o">=</span> <span class="n">_merge</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
-                                <span class="bp">self</span><span class="o">.</span><span class="n">f_post</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">available</span><span class="p">]),</span>
+                                <span class="bp">self</span><span class="o">.</span><span class="n">_estimate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">[</span><span class="n">available</span><span class="p">]),</span>
                                 <span class="n">available</span><span class="p">)</span>
 
         <span class="c1"># Finally, actually update inputs.</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">x</span> <span class="o">=</span> <span class="n">B</span><span class="o">.</span><span class="n">concat</span><span class="p">([</span><span class="bp">self</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">y</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_estimate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">x</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">dense</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">f_post</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
 
     <span class="k">def</span> <span class="nf">observe</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">y</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;Observe values for the current layer.</span>
